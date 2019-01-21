@@ -33,6 +33,8 @@ function Bear:_init(world, id, ... )
     self.fixture = love.physics.newFixture(self.body, self.shape)          -- connect body to shape
     self.fixture:setRestitution(0.4)                                -- make it bouncy
     self.fixture:setUserData(id)
+
+    self.body:setLinearVelocity(self:randomDirection())
 end
 
 function Bear:update(dt)
@@ -42,8 +44,17 @@ function Bear:update(dt)
     end
 end
 
+function Bear:randomDirection(velocity)
+    local v = velocity or 20
+    local angle = math.random(0, 628) / 100
+    local x = math.sin(angle)
+    local y = math.cos(angle)
+    print("angle="..angle.."\tx="..x.."\ty="..y)
+    return x*v, y*v
+end
+
 function Bear:randomPosition()
-    return math.random(200, 600), math.random(200, 600)
+    return math.random(200, 600), math.random(200, 400)
 end
 
 function Bear:draw()
