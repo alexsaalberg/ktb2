@@ -78,27 +78,6 @@ function love.mousepressed(x, y, button, istouch)
    end
 end
 
-function clickRaycastCallback(fixture, x, y, xn, yn, fraction)
-   print("click collision!")
-
-   local hit = {}
-   hit.fixture = fixture
-   local entityId = fixture:getUserData()
-   local entity = entities[entityId]
-
-   local remainingHealth = entity:damage(100)
-   if (remainingHealth <= 0) then
-      entity:kill()
-      entity.body:setPosition(x, y - 20)
-      --entity[entityId] = Bear:new(world, entityId)
-   end
-
-   print("Hit! x"..fixture:getBody():getX().."y"..fixture:getBody():getY())
-   print("HitFraction "..fraction.. " xn"..xn.." yn"..yn)
- 
-   return 1 -- Does not continue with ray cast through all shapes.
-end
-
 function love.keypressed(key)
    if key == 'q' then
       love.event.quit()
