@@ -1,6 +1,9 @@
 Bear = require( "bear" )
 EntityManager = require( "entityManager" )
 
+math.randomseed( os.time() )
+
+--[[ love callbacks ]]
 function love.load()
    love.graphics.setNewFont(12)
    love.graphics.setColor(0,0,0)
@@ -32,6 +35,8 @@ function love.load()
 
    EntityManager:register(mouseEntity, id)
    mouseEntityId = id
+
+   createBorder(world, 10, 10, love.graphics.getWidth() - 10, love.graphics.getHeight() - 10)
 end
 
 function love.update(dt)
@@ -50,13 +55,26 @@ function love.draw()
       for _, body in pairs(world:getBodies()) do
          for _, fixture in pairs(body:getFixtures()) do
             local shape = fixture:getShape()
-             
-            local cx, cy = body:getWorldPoints(shape:getPoint())
-            love.graphics.setColor(0,0,0,255)
-            love.graphics.circle("fill", cx, cy, shape:getRadius())
 
-            love.graphics.setColor(0,0,0,255)
-            love.graphics.print("cx" .. cx .. ", cy" .. cy, 20, 80)
+            if shape:getType() == "circle" then
+               local cx, cy = body:getWorldPoints(shape:getPoint())
+               love.graphics.setColor(0,0,0,255)
+               love.graphics.circle("fill", cx, cy, shape:getRadius())
+
+               love.graphics.setColor(0,0,0,255)
+               love.graphics.print("cx" .. cx .. ", cy" .. cy, 20, 80)
+            end
+            if shape:getType() == "polygon" then
+               love.graphics.setColor(0,0,0,255)
+               love.graphics.polygon("fill", body:getWorldPoints(shape:getPoints()))
+               --[[
+               local rx, ry = body:getWorldPoints(shape:getPosition())
+               local w, h = shape:getWidth(), shape:getHeight()
+               love.graphics.setColor(0,0,0,255)
+               love.graphics.rectangle("fill", rx, ry, rx+w, ry+h)
+               print("Drawing rectangle x="..rx.." y="..ry.." w="..h.." h="..h)
+               ]]
+            end
          end
       end
    end
@@ -71,6 +89,7 @@ function love.mousepressed(x, y, button, istouch)
       print("Click! x"..x.."y"..y)
       --local range = 5
       --wrld:rayCast(x-range, y-range, x+range, y+range, clickRaycastCallback)
+      mouseEntity.body:setPosition(-100, -100)
       mouseEntity.body:setPosition(x, y)
    end
    if button == 2 then
@@ -90,7 +109,7 @@ function love.keypressed(key)
    end
 end
 
--- physics callbacks
+--[[ collision callbacks ]]
 function beginContact(a, b, coll)
    if( a:getUserData() == mouseEntityId ) then
       -- mouse clicked something
@@ -115,7 +134,27 @@ function postSolve(a, b, coll, normalimpulse, tangentimpulse)
  
 end
 
--- other functions
+--[[ other ]]
+function createBorder(world, minX, minY, maxX, maxY)
+   local boxWidth = 50
+
+   local leftBox = makeBox(world, minX-boxWidth, minY, minX, maxY)
+   local topBox = makeBox(world, minX, minY-boxWidth, maxX, minY)
+   local rightBox = makeBox(world, maxX, minY, maxX+boxWidth, maxY)
+   local bottomBox = makeBox(world, minX, maxY, maxX, maxY+boxWidth)
+end
+
+function makeBox(world, minX, minY, maxX, maxY)
+   local box = {}
+   box.body = love.physics.newBody(world, minX, minY, "static")
+   box.body:setMass(10)
+   box.body:setSleepingAllowed(false)
+   box.shape = love.physics.newRectangleShape(maxX-minX, maxY-minY)
+   box.fixture = love.physics.newFixture(box.body, box.shape)
+   box.fixture:setRestitution(0.4)
+end
+
+
 function click(id)
    print("click collision! id="..(id or "nil"))
    local entity = EntityManager:get(id)
