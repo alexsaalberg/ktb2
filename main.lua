@@ -1,4 +1,5 @@
 Bear = require( "bear" )
+EntityManager = require( "entityManager" )
 
 function love.load()
    love.graphics.setNewFont(12)
@@ -12,20 +13,32 @@ function love.load()
 
    -- physics world
    world = love.physics.newWorld(0, 0, true)
+   world:setCallbacks(beginContact, endContact, preSolve, postSolve)
 
    -- game objects
-   entities = {}
-   for i=1,10 do
-      entities[i] = Bear:new(world)
+   for i=1,2 do
+      local id = EntityManager:getNewId()
+      EntityManager:register(Bear:new(world, id), id)
    end
+
+   local id = EntityManager:getNewId()
+   mouseEntity = {}
+   mouseEntity.body = love.physics.newBody(world, -100, -100, "dynamic")
+   mouseEntity.body:setSleepingAllowed(false)
+   mouseEntity.shape = love.physics.newCircleShape(10)
+   mouseEntity.fixture = love.physics.newFixture(mouseEntity.body, mouseEntity.shape)
+   mouseEntity.fixture:setUserData(id)
+   mouseEntity.fixture:setSensor(true)
+
+   EntityManager:register(mouseEntity, id)
+   mouseEntityId = id
 end
 
 function love.update(dt)
    world:update(dt)
 
-   for id, entity in pairs(entities) do
-      entity:update(dt)
-   end
+
+   EntityManager:update(dt)
 end
 
 function love.draw()
@@ -49,17 +62,41 @@ function love.draw()
    end
 
    if state.drawObjects then
-      for id, entity in pairs(entities) do
-         entity:draw()
-      end
+      EntityManager:draw()
    end
 end
 
 function love.mousepressed(x, y, button, istouch)
-   if button == 1 then
-      imgx = x -- move image to where mouse clicked
-      imgy = y
+   if button == 1 then -- left click
+      print("Click! x"..x.."y"..y)
+      --local range = 5
+      --wrld:rayCast(x-range, y-range, x+range, y+range, clickRaycastCallback)
+      mouseEntity.body:setPosition(x, y)
    end
+   if button == 2 then
+      entities[2].body:setPosition(x, y)
+   end
+end
+
+function clickRaycastCallback(fixture, x, y, xn, yn, fraction)
+   print("click collision!")
+
+   local hit = {}
+   hit.fixture = fixture
+   local entityId = fixture:getUserData()
+   local entity = entities[entityId]
+
+   local remainingHealth = entity:damage(100)
+   if (remainingHealth <= 0) then
+      entity:kill()
+      entity.body:setPosition(x, y - 20)
+      --entity[entityId] = Bear:new(world, entityId)
+   end
+
+   print("Hit! x"..fixture:getBody():getX().."y"..fixture:getBody():getY())
+   print("HitFraction "..fraction.. " xn"..xn.." yn"..yn)
+ 
+   return 1 -- Does not continue with ray cast through all shapes.
 end
 
 function love.keypressed(key)
@@ -72,4 +109,36 @@ function love.keypressed(key)
    if key == 'p' then
       state.drawPhysics = not state.drawPhysics
    end
+end
+
+-- physics callbacks
+function beginContact(a, b, coll)
+   if( a:getUserData() == mouseEntityId ) then
+      -- mouse clicked something
+      click( b:getUserData() )
+   end
+   if( b:getUserData() == mouseEntityId ) then
+      -- mouse clicked something
+      click( a:getUserData() )
+   end
+
+end
+ 
+function endContact(a, b, coll)
+ 
+end
+ 
+function preSolve(a, b, coll)
+ 
+end
+ 
+function postSolve(a, b, coll, normalimpulse, tangentimpulse)
+ 
+end
+
+-- other functions
+function click(id)
+   print("click collision! id="..(id or "nil"))
+   local entity = EntityManager:get(id)
+   entity:damage(100)
 end

@@ -19,18 +19,31 @@ function Bear:new(world, ... )
 end
 
 -- function that you would normally think of as the constructor.
-function Bear:_init(world, ... )
+function Bear:_init(world, id, ... )
+    -- game stuff
+    self.health = 100
+
     -- physics stuff
-    self.body = love.physics.newBody(world, 400,200, "dynamic")  -- set x,y position (400,200) and let it move and hit other objects ("dynamic")
+    local x = math.random(200, 600)
+    local y = math.random(200, 600)
+    self.body = love.physics.newBody(world, x, y, "dynamic")  -- set x,y position (400,200) and let it move and hit other objects ("dynamic")
     self.body:setMass(10)                                        -- make it pretty light
+    self.body:setSleepingAllowed(false)
     self.shape = love.physics.newCircleShape(50)                  -- give it a radius of 50
     self.fixture = love.physics.newFixture(self.body, self.shape)          -- connect body to shape
     self.fixture:setRestitution(0.4)                                -- make it bouncy
-    self.fixture:setUserData("bear")
+    self.fixture:setUserData(id)
 end
 
 function Bear:update(dt)
+    if self.health <= 0 then
+        self.body:setPosition(self:randomPosition())
+        self.health = 100
+    end
+end
 
+function Bear:randomPosition()
+    return math.random(200, 600), math.random(200, 600)
 end
 
 function Bear:draw()
@@ -51,6 +64,15 @@ function Bear:draw()
    love.graphics.print("x" .. b.body:getX() .. ", y" .. b.body:getY(), 20, 30)
    love.graphics.print("iW" .. imgWidth .. ", iH" .. imgHeight, 20, 40)
    --love.graphics.draw(Bear.image, self.body:getX(), self.body:getY())
+end
+
+function Bear:damage(damage)
+    self.health = self.health - damage
+    return self.health
+end
+
+function Bear:kill()
+
 end
 
 return Bear
