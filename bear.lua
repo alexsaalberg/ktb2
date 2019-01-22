@@ -26,15 +26,16 @@ function Bear:_init(world, id, ... )
     -- physics stuff
     local x = math.random(200, 600)
     local y = math.random(200, 600)
-    self.body = love.physics.newBody(world, x, y, "dynamic")  -- set x,y position (400,200) and let it move and hit other objects ("dynamic")
-    self.body:setMass(10)                                        -- make it pretty light
+    self.body = love.physics.newBody(world, x, y, "dynamic")
+    self.body:setMass(10)
     self.body:setSleepingAllowed(false)
     self.body:setFixedRotation(true)
-    self.shape = love.physics.newCircleShape(25)                  -- give it a radius of 50
-    self.fixture = love.physics.newFixture(self.body, self.shape)          -- connect body to shape
-    self.fixture:setRestitution(1.0)                                -- make it bouncy
+    self.shape = love.physics.newCircleShape(25)
+    self.fixture = love.physics.newFixture(self.body, self.shape)
+    self.fixture:setRestitution(0.9)
     self.fixture:setUserData(id)
-
+    --self.fixture:setCategory(2)
+    --self.fixture:setMask(2)
     self.body:setLinearVelocity(self:randomDirection())
 end
 
@@ -49,6 +50,7 @@ end
 function Bear:randomDirection(velocity)
     local v = velocity or 1000
     local angle = math.random(0, 628) / 100
+    angle = (math.random(0,4) * 90 * (3.14/180) ) + 45
     local x = math.sin(angle)
     local y = math.cos(angle)
     print("angle="..angle.."\tx="..x.."\ty="..y)
@@ -56,7 +58,7 @@ function Bear:randomDirection(velocity)
 end
 
 function Bear:randomPosition()
-    return math.random(200, 600), math.random(200, 400)
+    return math.random(50, 600), math.random(50, 400)
 end
 
 function Bear:draw()
