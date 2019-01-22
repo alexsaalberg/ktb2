@@ -71,12 +71,6 @@ function Bear:draw()
    local invXScale = imgWidth / shapeWidth
    local invYScale = imgWidth / shapeHeight
    love.graphics.draw(b.image, b.body:getX(), b.body:getY(), b.body:getAngle(), xScale, yScale, b.shape:getRadius() * invXScale, b.shape:getRadius() * invYScale)
-
-   love.graphics.setColor(0,0,0,255)
-   love.graphics.print("xScale" .. xScale .. ", yScale" .. yScale, 20, 20)
-   love.graphics.print("x" .. b.body:getX() .. ", y" .. b.body:getY(), 20, 30)
-   love.graphics.print("iW" .. imgWidth .. ", iH" .. imgHeight, 20, 40)
-   --love.graphics.draw(Bear.image, self.body:getX(), self.body:getY())
 end
 
 --[[ External ]]

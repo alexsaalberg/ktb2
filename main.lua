@@ -47,8 +47,6 @@ function love.update(dt)
 end
 
 function love.draw()
-   love.graphics.setColor(0,0,0,255)
-   love.graphics.print("Hello World", 600, 400)
    love.graphics.setColor(255,255,255,255)
 
    if state.drawPhysics then
@@ -67,13 +65,6 @@ function love.draw()
             if shape:getType() == "polygon" then
                love.graphics.setColor(0,0,0,255)
                love.graphics.polygon("fill", body:getWorldPoints( shape:getPoints() ) ) 
-               --[[
-               local rx, ry = body:getWorldPoints(shape:getPosition())
-               local w, h = shape:getWidth(), shape:getHeight()
-               love.graphics.setColor(0,0,0,255)
-               love.graphics.rectangle("fill", rx, ry, rx+w, ry+h) 
-               print("Drawing rectangle x="..rx.." y="..ry.." w="..h.." h="..h)
-               ]]
             end
          end
       end
