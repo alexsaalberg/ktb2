@@ -15,6 +15,7 @@ function love.load()
    state = {}
    state.drawObjects = true
    state.drawPhysics = false
+   state.drawGUI = true
    state.score = 0
 
    -- physics world
@@ -27,6 +28,7 @@ function love.load()
       EntityManager:register(Bear:new(world, id), id)
    end
 
+   -- mouse entity
    local id = EntityManager:getNewId()
    mouseEntity = {}
    mouseEntity.body = love.physics.newBody(world, -100, -100, "dynamic")
@@ -39,6 +41,10 @@ function love.load()
    EntityManager:register(mouseEntity, id)
    mouseEntityId = id
 
+   -- background
+   background = love.graphics.newImage("forest.jpg")
+   tiledBackground = love.graphics.newImage("leaves.png")
+
    createBorder(world, 2, 2, love.graphics.getWidth() - 2, love.graphics.getHeight() - 2)
 end
 
@@ -46,10 +52,20 @@ function love.update(dt)
    world:update(dt)
 
    EntityManager:update(dt)
+
+   mouseEntity.body:setPosition(love.mouse:getPosition())
 end
 
 function love.draw()
    love.graphics.setColor(255,255,255,255)
+
+   love.graphics.setColor(128,128,128,128)
+   love.graphics.draw(background, 0, 0)
+   for x=0,2 do
+      for y=0,2 do
+         love.graphics.draw(tiledBackground, x * tiledBackground:getWidth(), y * tiledBackground:getHeight())
+      end
+   end
 
    if state.drawPhysics then
       for _, body in pairs(world:getBodies()) do
@@ -71,6 +87,11 @@ function love.draw()
 
    if state.drawObjects then
       EntityManager:draw()
+   end
+
+   if state.drawGUI then
+      love.graphics.setColor(0,0,0,255)
+      love.graphics.print("Score = "..state.score)
    end
 end
 
@@ -151,4 +172,5 @@ function click(id)
    print("click collision! id="..(id or "nil"))
    local entity = EntityManager:get(id)
    entity:damage(100)
+   state.score = state.score + 1
 end
