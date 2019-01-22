@@ -60,9 +60,6 @@ function love.draw()
                local cx, cy = body:getWorldPoints(shape:getPoint())
                love.graphics.setColor(0,0,0,255)
                love.graphics.circle("fill", cx, cy, shape:getRadius())
-
-               love.graphics.setColor(0,0,0,255)
-               love.graphics.print("cx" .. cx .. ", cy" .. cy, 20, 80)
             end
             if shape:getType() == "polygon" then
                love.graphics.setColor(0,0,0,255)
