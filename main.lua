@@ -19,7 +19,7 @@ function love.load()
    world:setCallbacks(beginContact, endContact, preSolve, postSolve)
 
    -- game objects
-   for i=1,2 do
+   for i=1,10 do
       local id = EntityManager:getNewId()
       EntityManager:register(Bear:new(world, id), id)
    end
@@ -66,12 +66,12 @@ function love.draw()
             end
             if shape:getType() == "polygon" then
                love.graphics.setColor(0,0,0,255)
-               love.graphics.polygon("fill", body:getWorldPoints(shape:getPoints()))
+               love.graphics.polygon("fill", body:getWorldPoints( shape:getPoints() ) ) 
                --[[
                local rx, ry = body:getWorldPoints(shape:getPosition())
                local w, h = shape:getWidth(), shape:getHeight()
                love.graphics.setColor(0,0,0,255)
-               love.graphics.rectangle("fill", rx, ry, rx+w, ry+h)
+               love.graphics.rectangle("fill", rx, ry, rx+w, ry+h) 
                print("Drawing rectangle x="..rx.." y="..ry.." w="..h.." h="..h)
                ]]
             end
@@ -138,6 +138,8 @@ end
 function createBorder(world, minX, minY, maxX, maxY)
    local boxWidth = 50
 
+   print("minX="..minX.." minY="..minY.." maxX="..maxX.." maxY="..maxY)
+
    local leftBox = makeBox(world, minX-boxWidth, minY, minX, maxY)
    local topBox = makeBox(world, minX, minY-boxWidth, maxX, minY)
    local rightBox = makeBox(world, maxX, minY, maxX+boxWidth, maxY)
@@ -145,17 +147,23 @@ function createBorder(world, minX, minY, maxX, maxY)
 end
 
 function makeBox(world, minX, minY, maxX, maxY)
+   print("minX="..minX.." minY="..minY.." maxX="..maxX.." maxY="..maxY)
+
    local box = {}
+   local w, h = maxX-minX, maxY-minY
    box.body = love.physics.newBody(world, minX, minY, "static")
    box.body:setMass(10)
    box.body:setSleepingAllowed(false)
-   box.shape = love.physics.newRectangleShape(maxX-minX, maxY-minY)
+   box.shape = love.physics.newRectangleShape(w/2, h/2, w, h, 0)
    box.fixture = love.physics.newFixture(box.body, box.shape)
-   box.fixture:setRestitution(0.4)
+   box.fixture:setRestitution(1.0)
 end
 
 
 function click(id)
+   if not id then
+      return
+   end
    print("click collision! id="..(id or "nil"))
    local entity = EntityManager:get(id)
    entity:damage(100)

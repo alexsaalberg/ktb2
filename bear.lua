@@ -5,7 +5,7 @@ local Bear = {}
 Bear.image = love.graphics.newImage("bear.png")
 
 
--- magic constructor. This is exactly the same no matter what the class is for.
+-- constructor
 function Bear:new(world, ... )
     -- create a new table for the object instance
     local instance = {}
@@ -29,9 +29,10 @@ function Bear:_init(world, id, ... )
     self.body = love.physics.newBody(world, x, y, "dynamic")  -- set x,y position (400,200) and let it move and hit other objects ("dynamic")
     self.body:setMass(10)                                        -- make it pretty light
     self.body:setSleepingAllowed(false)
-    self.shape = love.physics.newCircleShape(50)                  -- give it a radius of 50
+    self.body:setFixedRotation(true)
+    self.shape = love.physics.newCircleShape(25)                  -- give it a radius of 50
     self.fixture = love.physics.newFixture(self.body, self.shape)          -- connect body to shape
-    self.fixture:setRestitution(0.4)                                -- make it bouncy
+    self.fixture:setRestitution(1.0)                                -- make it bouncy
     self.fixture:setUserData(id)
 
     self.body:setLinearVelocity(self:randomDirection())
@@ -40,12 +41,13 @@ end
 function Bear:update(dt)
     if self.health <= 0 then
         self.body:setPosition(self:randomPosition())
+        self.body:setLinearVelocity(self:randomDirection())
         self.health = 100
     end
 end
 
 function Bear:randomDirection(velocity)
-    local v = velocity or 20
+    local v = velocity or 1000
     local angle = math.random(0, 628) / 100
     local x = math.sin(angle)
     local y = math.cos(angle)
@@ -77,6 +79,7 @@ function Bear:draw()
    --love.graphics.draw(Bear.image, self.body:getX(), self.body:getY())
 end
 
+--[[ External ]]
 function Bear:damage(damage)
     self.health = self.health - damage
     return self.health
