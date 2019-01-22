@@ -9,10 +9,13 @@ function love.load()
    love.graphics.setColor(0,0,0)
    love.graphics.setBackgroundColor(255,255,255)
 
+   love.window.setMode(800,600, {display=2})
+
    -- game state
    state = {}
    state.drawObjects = true
    state.drawPhysics = false
+   state.score = 0
 
    -- physics world
    world = love.physics.newWorld(0, 0, true)
@@ -36,12 +39,11 @@ function love.load()
    EntityManager:register(mouseEntity, id)
    mouseEntityId = id
 
-   createBorder(world, 10, 10, love.graphics.getWidth() - 10, love.graphics.getHeight() - 10)
+   createBorder(world, 2, 2, love.graphics.getWidth() - 2, love.graphics.getHeight() - 2)
 end
 
 function love.update(dt)
    world:update(dt)
-
 
    EntityManager:update(dt)
 end
@@ -78,13 +80,8 @@ end
 function love.mousepressed(x, y, button, istouch)
    if button == 1 then -- left click
       print("Click! x"..x.."y"..y)
-      --local range = 5
-      --wrld:rayCast(x-range, y-range, x+range, y+range, clickRaycastCallback)
       mouseEntity.body:setPosition(-100, -100)
       mouseEntity.body:setPosition(x, y)
-   end
-   if button == 2 then
-      entities[2].body:setPosition(x, y)
    end
 end
 
@@ -149,7 +146,6 @@ function makeBox(world, minX, minY, maxX, maxY)
    box.fixture = love.physics.newFixture(box.body, box.shape)
    box.fixture:setRestitution(1.0)
 end
-
 
 function click(id)
    if not id then
