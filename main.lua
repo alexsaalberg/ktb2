@@ -1,4 +1,5 @@
 Bear = require( "bear" )
+Wolf = require( "wolf" )
 EntityManager = require( "entityManager" )
 
 math.randomseed( os.time() )
@@ -23,12 +24,21 @@ function love.load()
    world:setCallbacks(beginContact, endContact, preSolve, postSolve)
 
    -- game objects
-   for i=1,10 do
+   for i=1,1 do
       local id = EntityManager:getNewId()
-      EntityManager:register(Bear:new(world, id), id)
+
+      local bear = Bear:new()
+      bear:init(world, id)
+      EntityManager:register(bear, id)
    end
 
-   -- mouse entity
+   local wolfId = EntityManager:getNewId()
+   local wolf = Wolf:new()
+   wolf:init(world, id)
+   EntityManager:register(wolf, id)
+
+
+   --mouse entity
    local id = EntityManager:getNewId()
    mouseEntity = {}
    mouseEntity.body = love.physics.newBody(world, -100, -100, "dynamic")
@@ -40,6 +50,7 @@ function love.load()
 
    EntityManager:register(mouseEntity, id)
    mouseEntityId = id
+
 
    -- background
    background = love.graphics.newImage("forest.jpg")
@@ -82,6 +93,13 @@ function love.draw()
                love.graphics.polygon("fill", body:getWorldPoints( shape:getPoints() ) ) 
             end
          end
+
+         local x, y = body:getPosition()
+         local vx, vy = body:getLinearVelocity()
+         vx, vy = vx, vy
+
+         love.graphics.setColor(0,0,255,255)
+         love.graphics.line(x, y, x+vx, y+vy)
       end
    end
 
@@ -119,11 +137,11 @@ end
 function beginContact(a, b, coll)
    if( a:getUserData() == mouseEntityId ) then
       -- mouse clicked something
-      click( b:getUserData() )
+      --click( b:getUserData() )
    end
    if( b:getUserData() == mouseEntityId ) then
       -- mouse clicked something
-      click( a:getUserData() )
+      --click( a:getUserData() )
    end
 
 end
