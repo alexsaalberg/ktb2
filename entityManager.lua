@@ -46,6 +46,33 @@ function EntityManager:draw()
   end
 end
 
+function EntityManager:mousepressed(...)
+  for id, entity in pairs(self.entities) do
+    -- call entity.draw() on any entity which has that function
+    callIfExists(entity.mousepressed, entity, ...)
+  end
+end
+
+function EntityManager:mousereleased(...)
+  for id, entity in pairs(self.entities) do
+    -- call entity.draw() on any entity which has that function
+    callIfExists(entity.mousereleased, entity, ...)
+  end
+end
+
+function EntityManager:keypressed(...)
+  for id, entity in pairs(self.entities) do
+    -- call entity.draw() on any entity which has that function
+    callIfExists(entity.keypressed, entity, ...)
+  end
+end
+
+function callIfExists(f, ...)
+  if f then
+    f(...)
+  end
+end
+
 --[[ internal functions ]]
 
 return EntityManager
