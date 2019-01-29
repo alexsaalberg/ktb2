@@ -1,3 +1,5 @@
+ExtraMath = require( "extraMath" )
+
 -- create the base table for the class definition.
 local Animal = {}
 
@@ -6,6 +8,7 @@ Animal.image = love.graphics.newImage("bear.png")
 Animal.maxHealth = 100
 Animal.points = 1
 Animal.radius = 25
+Animal.physicsRadius = 15
 Animal.mass = 10
 
 -- constructor
@@ -27,6 +30,8 @@ function Animal:init(world, id, ... )
   self.id = id
   self.health = self.maxHealth
   self:initPhysics(world, id) 
+  self.scripts = {}
+  self.scriptCount = 1
 end
 
 -- called when killed
@@ -50,7 +55,7 @@ function Animal:initPhysics(world, id, x, y, vX, vY, shape, mass, restitution)
 
   restitution = restitution or 0.9
 
-  self.shape = shape or love.physics.newCircleShape(self.radius)
+  self.shape = shape or love.physics.newCircleShape(self.innerRadius)
 
   self.body = love.physics.newBody(world, x, y, "dynamic")
   self.body:setLinearVelocity(vX, vY)
@@ -68,6 +73,23 @@ function Animal:update(dt)
     if self.health <= 0 then
       self:respawn()
     end
+
+    local vx, vy = self.body:getLinearVelocity()
+    local speed = ExtraMath.magnitude(vx, vy)
+      --print("speed="..speed.." vx="..vx.." vy="..vy)
+    if( speed < 50.0 ) then
+      --print("speed="..speed.." vx="..vx.." vy="..vy)
+      self.body:setLinearVelocity(self:randomVelocity(75))
+    end
+
+    for i, scriptObj in pairs(self.scripts) do
+      scriptObj.delay = scriptObj.delay - dt
+
+      if(scriptObj.delay < 0) then
+        self.scripts[i] = nil
+        scriptObj.script(self)
+      end
+    end
 end
 
 -- Love2D callback
@@ -76,29 +98,37 @@ function Animal:draw()
    local b = self --faster
    local imgWidth = b.image:getWidth()
    local imgHeight = b.image:getHeight()
-   local shapeHeight = b.shape:getRadius() * 2
-   local shapeWidth = b.shape:getRadius() * 2
+   local shapeHeight = self.radius * 2
+   local shapeWidth = self.radius * 2
    local xScale = shapeWidth / imgWidth
    local yScale = shapeHeight / imgHeight
    local invXScale = imgWidth / shapeWidth
    local invYScale = imgWidth / shapeHeight
-   love.graphics.draw(b.image, b.body:getX(), b.body:getY(), b.body:getAngle(), xScale, yScale, b.shape:getRadius() * invXScale, b.shape:getRadius() * invYScale)
+   love.graphics.draw(b.image, b.body:getX(), b.body:getY(), b.body:getAngle(), xScale, yScale, self.radius * invXScale, self.radius * invYScale)
 end
 
 -- Called in respawn()
 function Animal:randomVelocity(velocity)
-  local v = velocity or 1000
+  local v = velocity or 75
   local angle = math.random(0, 628) / 100
   angle = (math.random(0,4) * 90 * (3.14/180) ) + 45
   local x = math.sin(angle)
   local y = math.cos(angle)
-  print("angle="..angle.."\tx="..x.."\ty="..y)
-  return 0, 0, x*v, y*v
+  --print("angle="..angle.."\tx="..x.."\ty="..y)
+  return x*v, y*v
 end
 
 -- Called in respawn()
 function Animal.randomPosition()
     return math.random(50, 600), math.random(50, 400)
+end
+
+function Animal:addDelayedScript(delay, script)
+  self.scriptCount = self.scriptCount + 1
+  scriptObj = {}
+  scriptObj.delay = delay
+  scriptObj.script = script
+  self.scripts[self.scriptCount] = scriptObj
 end
 
 -- Call to damage
