@@ -1,6 +1,7 @@
 Bear = require( "bear" )
 Wolf = require( "wolf" )
 EntityManager = require( "entityManager" )
+MouseEntity = require( "mouseEntity" )
 
 math.randomseed( os.time() )
 
@@ -18,63 +19,49 @@ function love.load()
    state.drawPhysics = false
    state.drawGUI = true
    state.score = 0
+   state.justClicked = true
 
    -- physics world
-   world = love.physics.newWorld(0, 0, true)
-   world:setCallbacks(beginContact, endContact, preSolve, postSolve)
+   state.world = love.physics.newWorld(0, 0, true)
+   state.world:setCallbacks(beginContact, endContact, preSolve, postSolve)
 
    -- game objects
-   for i=1,1 do
+   for i=1,50 do
       local id = EntityManager:getNewId()
 
       local bear = Bear:new()
-      bear:init(world, id)
+      bear:init(state.world, id)
       EntityManager:register(bear, id)
    end
 
-   local wolfId = EntityManager:getNewId()
-   local wolf = Wolf:new()
-   wolf:init(world, id)
-   EntityManager:register(wolf, id)
-
-
    --mouse entity
    local id = EntityManager:getNewId()
-   mouseEntity = {}
-   mouseEntity.body = love.physics.newBody(world, -100, -100, "dynamic")
-   mouseEntity.body:setSleepingAllowed(false)
-   mouseEntity.shape = love.physics.newCircleShape(10)
-   mouseEntity.fixture = love.physics.newFixture(mouseEntity.body, mouseEntity.shape)
-   mouseEntity.fixture:setUserData(id)
-   mouseEntity.fixture:setSensor(true)
 
-   EntityManager:register(mouseEntity, id)
-   mouseEntityId = id
-
+   state.mouseEntity = MouseEntity:new()
+   state.mouseEntity:init(state.world, id)
+   EntityManager:register(state.mouseEntity, id)
+   state.mouseEntityId = id
 
    -- background
-   background = love.graphics.newImage("forest.jpg")
-   tiledBackground = love.graphics.newImage("leaves.png")
+   state.background = love.graphics.newImage("forest.jpg")
+   state.tiledBackground = love.graphics.newImage("leaves.png")
 
    createBorder(world, 2, 2, love.graphics.getWidth() - 2, love.graphics.getHeight() - 2)
 end
 
 function love.update(dt)
-   world:update(dt)
+   state.world:update(dt)
 
    EntityManager:update(dt)
-
-   mouseEntity.body:setPosition(love.mouse:getPosition())
 end
 
 function love.draw()
    love.graphics.setColor(255,255,255,255)
+   love.graphics.draw(state.background, 0, 0)
 
-   love.graphics.setColor(128,128,128,128)
-   love.graphics.draw(background, 0, 0)
    for x=0,2 do
       for y=0,2 do
-         love.graphics.draw(tiledBackground, x * tiledBackground:getWidth(), y * tiledBackground:getHeight())
+         love.graphics.draw(state.tiledBackground, x * state.tiledBackground:getWidth(), y * state.tiledBackground:getHeight())
       end
    end
 
@@ -110,18 +97,22 @@ function love.draw()
    if state.drawGUI then
       love.graphics.setColor(0,0,0,255)
       love.graphics.print("Score = "..state.score)
+      love.graphics.print("Tool = "..state.mouseEntity.tools[state.mouseEntity.activeToolKey].name, 10, 20)
    end
 end
 
 function love.mousepressed(x, y, button, istouch)
-   if button == 1 then -- left click
-      print("Click! x"..x.."y"..y)
-      mouseEntity.body:setPosition(-100, -100)
-      mouseEntity.body:setPosition(x, y)
-   end
+   EntityManager:mousepressed(x, y, button, istouch)
+end 
+
+function love.mousereleased(x, y, button, istouch)
+   EntityManager:mousereleased(x, y, button, istouch)
 end
 
+
 function love.keypressed(key)
+   EntityManager:keypressed(key)
+
    if key == 'q' then
       love.event.quit()
    end
@@ -133,21 +124,47 @@ function love.keypressed(key)
    end
 end
 
+function addContactId(map, body)
+   id = body:getUserData()
+
+   if id == nil then return end
+
+   print("add contact")
+   map[id] = true
+end
+
+function removeContactId(map, body)
+   id = body:getUserData()
+
+   if not id then return end
+
+   map[id] = nil
+end
+
 --[[ collision callbacks ]]
 function beginContact(a, b, coll)
-   if( a:getUserData() == mouseEntityId ) then
+   if( a:getUserData() == state.mouseEntityId ) then
       -- mouse clicked something
+      print("add")
+      addContactId(state.mouseEntity.contacts, b)
       --click( b:getUserData() )
+      --mouseEntity.contacts[]
    end
-   if( b:getUserData() == mouseEntityId ) then
+   if( b:getUserData() == state.mouseEntityId ) then
       -- mouse clicked something
+      addContactId(state.mouseEntity.contacts, a)
       --click( a:getUserData() )
    end
 
 end
  
 function endContact(a, b, coll)
- 
+   if( a:getUserData() == state.mouseEntityId ) then
+      -- remove id from contact map
+      removeContactId(state.mouseEntity.contacts, b)
+   end
+      -- remove id from contact map 
+      removeContactId(state.mouseEntity.contacts, a)
 end
  
 function preSolve(a, b, coll)
@@ -175,7 +192,7 @@ function makeBox(world, minX, minY, maxX, maxY)
 
    local box = {}
    local w, h = maxX-minX, maxY-minY
-   box.body = love.physics.newBody(world, minX, minY, "static")
+   box.body = love.physics.newBody(state.world, minX, minY, "static")
    box.body:setMass(10)
    box.body:setSleepingAllowed(false)
    box.shape = love.physics.newRectangleShape(w/2, h/2, w, h, 0)
@@ -187,8 +204,11 @@ function click(id)
    if not id then
       return
    end
+   if state.justClicked then
    print("click collision! id="..(id or "nil"))
    local entity = EntityManager:get(id)
    entity:damage(100)
    state.score = state.score + 1
+   state.justClicked = false
+   end
 end
