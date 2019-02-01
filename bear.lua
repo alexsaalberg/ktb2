@@ -9,6 +9,7 @@ Bear.radius = 20
 Bear.innerRadius = 10
 Bear.maxHealth = 100
 Bear.points = 1
+Bear.name = "bear"
 
 -- constructor
 function Bear:new()

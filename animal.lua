@@ -10,6 +10,7 @@ Animal.points = 1
 Animal.radius = 25
 Animal.physicsRadius = 15
 Animal.mass = 10
+Animal.name = "animal"
 
 -- constructor
 function Animal:new()
