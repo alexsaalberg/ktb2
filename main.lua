@@ -1,7 +1,10 @@
 Bear = require( "bear" )
 Wolf = require( "wolf" )
+Panda = require( "panda" )
 EntityManager = require( "entityManager" )
 MouseEntity = require( "mouseEntity" )
+ExtraMath = require( "extraMath" )
+DelayQueue = require( "delayQueue" )
 
 math.randomseed( os.time() )
 
@@ -23,7 +26,9 @@ function love.load()
 
    -- physics world
    state.world = love.physics.newWorld(0, 0, true)
+   EntityManager.world = state.world
    state.world:setCallbacks(beginContact, endContact, preSolve, postSolve)
+   state.delayQueue = DelayQueue:new()
 
    -- game objects
    for i=1,50 do
@@ -53,6 +58,8 @@ function love.update(dt)
    state.world:update(dt)
 
    EntityManager:update(dt)
+
+   state.delayQueue:update(dt)
 end
 
 function love.draw()
@@ -96,8 +103,8 @@ function love.draw()
 
    if state.drawGUI then
       love.graphics.setColor(0,0,0,255)
-      love.graphics.print("Score = "..state.score)
-      love.graphics.print("Tool = "..state.mouseEntity.tools[state.mouseEntity.activeToolKey].name, 10, 20)
+      love.graphics.print("Score = "..state.score, 5)
+      love.graphics.print("Tool = "..state.mouseEntity.tools[state.mouseEntity.activeToolKey].name, 5, 20)
    end
 end
 
@@ -143,17 +150,65 @@ end
 
 --[[ collision callbacks ]]
 function beginContact(a, b, coll)
-   if( a:getUserData() == state.mouseEntityId ) then
+   local aId = a:getUserData()
+   local bId = b:getUserData()
+
+   if( aId == state.mouseEntityId ) then
       -- mouse clicked something
-      print("add")
       addContactId(state.mouseEntity.contacts, b)
-      --click( b:getUserData() )
-      --mouseEntity.contacts[]
+      return
    end
-   if( b:getUserData() == state.mouseEntityId ) then
+   if( bId == state.mouseEntityId ) then
       -- mouse clicked something
       addContactId(state.mouseEntity.contacts, a)
-      --click( a:getUserData() )
+      return
+   end
+
+   if EntityManager:isAnimal(aId) and EntityManager:isAnimal(bId) then
+      local aBody = a:getBody()
+      local bBody = b:getBody()
+
+      local aVelocity = ExtraMath.magnitude(aBody:getLinearVelocity())
+      local bVelocity = ExtraMath.magnitude(bBody:getLinearVelocity())
+
+      local aVX, aVY = aBody:getLinearVelocity()
+      local bVX, bVY = bBody:getLinearVelocity()
+
+      collForce = aVelocity * aBody:getMass() + bVelocity * bBody:getMass()
+
+      if collForce > 800 then
+         local aEntity = EntityManager:get(aId)
+         local bEntity = EntityManager:get(bId)
+
+         local x, y = coll:getPositions()
+
+
+         mergeFunction = function(obj)   
+            local firstId = aId
+            local secondId = bId
+
+            EntityManager:delete(firstId)
+            EntityManager:delete(secondId)
+
+            local id = EntityManager:getNewId()
+            local panda = Panda:new()
+            panda:init(state.world, id, x, y)
+            EntityManager:register(panda, id)
+
+            if aVelocity > bVelocity then
+               aVX, aVY = aVX/2, aVY/2
+               bVX, bVY = bVX/2, bVY/2
+
+               panda.body:setLinearVelocity(aVX, aVY)
+            else
+               panda.body:setLinearVelocity(bVX, bVY)
+            end
+         end
+
+         if aEntity.name == "bear" and bEntity.name == "bear" then
+            state.delayQueue:addDelayedScript(0, mergeFunction)
+         end
+      end
    end
 
 end
@@ -179,7 +234,7 @@ end
 function createBorder(world, minX, minY, maxX, maxY)
    local boxWidth = 50
 
-   print("minX="..minX.." minY="..minY.." maxX="..maxX.." maxY="..maxY)
+   --print("minX="..minX.." minY="..minY.." maxX="..maxX.." maxY="..maxY)
 
    local leftBox = makeBox(world, minX-boxWidth, minY, minX, maxY)
    local topBox = makeBox(world, minX, minY-boxWidth, maxX, minY)
@@ -188,7 +243,7 @@ function createBorder(world, minX, minY, maxX, maxY)
 end
 
 function makeBox(world, minX, minY, maxX, maxY)
-   print("minX="..minX.." minY="..minY.." maxX="..maxX.." maxY="..maxY)
+   --print("minX="..minX.." minY="..minY.." maxX="..maxX.." maxY="..maxY)
 
    local box = {}
    local w, h = maxX-minX, maxY-minY
