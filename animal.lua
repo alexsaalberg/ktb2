@@ -30,7 +30,7 @@ end
 function Animal:init(world, id, ... )
   self.id = id
   self.health = self.maxHealth
-  self:initPhysics(world, id) 
+  self:initPhysics(world, id, ...) 
   self.scripts = {}
   self.scriptCount = 1
 end
