@@ -114,7 +114,6 @@ function MouseEntity:initTools()
 		local drag = mouseEntity.drag
 		if drag and drag.animal == nil then
 			drag = nil
-			print("nilling drag in update()")
 		end
 
 		if drag then
@@ -126,20 +125,16 @@ function MouseEntity:initTools()
 	meteor.draw = function(mouseEntity)
 		local drag = mouseEntity.drag
 		if not mouseEntity then
-			print("mouse nil")
 		end
 
 		if not drag then
-			print('drag nil"')
 		end
 
 		if drag then
-			print("drawing")
 			if drag.startX and drag.startY and drag.endX and drag.endY then
-				print('actually draing"')
 		      love.graphics.setColor(0,0,255,255)
 				love.graphics.line(drag.startX, drag.startY, drag.endX, drag.endY)
-				print("sx="..drag.startX.."\tsY="..drag.startY.."eX="..drag.endX.."ey="..drag.endY)
+				--print("sx="..drag.startX.."\tsY="..drag.startY.."eX="..drag.endX.."ey="..drag.endY)
 			end
 		end
 	end
@@ -173,7 +168,6 @@ function MouseEntity:update(...)
 end
 
 function MouseEntity:draw()
-	print("mouse draw")
 	local activeTool = self.tools[self.activeToolKey]
 	callIfExists(activeTool.draw, self)
 end
