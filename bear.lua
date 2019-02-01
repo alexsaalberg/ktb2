@@ -6,7 +6,7 @@ local Bear = Animal:new()
 -- Bear static variables
 Bear.image = love.graphics.newImage("bear.png")
 Bear.radius = 20
-Bear.innerRadius = 10
+Bear.innerRadius = 20
 Bear.maxHealth = 100
 Bear.points = 1
 Bear.name = "bear"
