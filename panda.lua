@@ -6,7 +6,7 @@ local Panda = Bear:new()
 -- Panda static variables
 Panda.image = love.graphics.newImage("panda.png")
 Panda.radius = 20
-Panda.innerRadius = 10
+Panda.innerRadius = 20
 Panda.maxHealth = 100
 Panda.points = 1
 Panda.name = "panda"
