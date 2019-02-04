@@ -10,11 +10,12 @@ math.randomseed( os.time() )
 
 --[[ love callbacks ]]
 function love.load()
+   math.randomseed( os.time() )
    love.graphics.setNewFont(12)
    love.graphics.setColor(0,0,0)
    love.graphics.setBackgroundColor(255,255,255)
 
-   love.window.setMode(800,600, {display=2})
+   love.window.setMode(800,600, {display=1})
 
    -- game state
    state = {}
@@ -47,9 +48,12 @@ function love.load()
    EntityManager:register(state.mouseEntity, id)
    state.mouseEntityId = id
 
+   state.combineSound = love.audio.newSource("pop.mp3", "static")
+   state.hitSound = love.audio.newSource("sound/pool_balls_1.ogg", "static")
+
    -- background
    state.background = love.graphics.newImage("forest.jpg")
-   state.tiledBackground = love.graphics.newImage("leaves.png")
+   state.tiledBackground = love.graphics.newImage("images/felt_green.png")
 
    createBorder(world, 2, 2, love.graphics.getWidth() - 2, love.graphics.getHeight() - 2)
 end
@@ -73,7 +77,7 @@ function love.draw()
    end
 
    if state.drawPhysics then
-      for _, body in pairs(world:getBodies()) do
+      for _, body in pairs(state.dworld:getBodies()) do
          for _, fixture in pairs(body:getFixtures()) do
             local shape = fixture:getShape()
 
@@ -136,7 +140,6 @@ function addContactId(map, body)
 
    if id == nil then return end
 
-   print("add contact")
    map[id] = true
 end
 
@@ -165,6 +168,7 @@ function beginContact(a, b, coll)
    end
 
    if EntityManager:isAnimal(aId) and EntityManager:isAnimal(bId) then
+
       local aBody = a:getBody()
       local bBody = b:getBody()
 
@@ -175,6 +179,57 @@ function beginContact(a, b, coll)
       local bVX, bVY = bBody:getLinearVelocity()
 
       collForce = aVelocity * aBody:getMass() + bVelocity * bBody:getMass()
+
+
+      local minSoundForce = 450
+      local minSoundPercent = 5
+      local maxSoundForce = 2000
+      local maxSoundPercent = 80
+
+      if collForce > minSoundForce then
+
+         -- percent within range
+         local forcePercent = ((collForce - minSoundForce) / (maxSoundForce - minSoundForce))
+
+         if forcePercent > 100 then
+            forcePercent = 100
+         end
+
+         -- interpolation of min and max
+         forcePercent = (1 - forcePercent) * minSoundPercent + (forcePercent * maxSoundPercent)
+
+         --ex 20% along range is .8*5 + .2*80 = 4 + 16 = 20
+
+         local newSound = love.audio.newSource("sound/pool_balls_1.ogg", "static")
+         --print(collForce.."\t"..forcePercent)
+         newSound:setVolume(forcePercent / 100)
+
+         if forcePercent < 25 then
+            newSound:setPitch(1.4)
+         elseif forcePercent < 50 then
+            newSound:setPitch(1.25)
+         elseif forcePercent < 75 then
+            newSound:setPitch(1.1)
+         end
+
+         -- if ExtraMath.rbool() then -- flip a coin to modify pitch
+         --    if ExtraMath.rbool() then -- flip a coin for direction
+         --       newSound:setPitch(1.5)
+         --       print("higher")
+         --    else
+         --       print('lower')
+         --       newSound:setPitch(0.75)
+         --    end
+         -- end
+
+         newSound:play()
+
+
+      end
+      
+
+
+
 
       if collForce > 800 then
          local aEntity = EntityManager:get(aId)
@@ -194,6 +249,12 @@ function beginContact(a, b, coll)
             local panda = Panda:new()
             panda:init(state.world, id, x, y)
             EntityManager:register(panda, id)
+            if state.combineSound:isPlaying() then
+               local newSound = love.audio.newSource("pop.mp3", "static")
+               newSound:play()
+            else
+               state.combineSound:play()
+            end
 
             if aVelocity > bVelocity then
                aVX, aVY = aVX/2, aVY/2
