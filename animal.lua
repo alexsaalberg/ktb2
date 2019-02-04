@@ -11,6 +11,7 @@ Animal.radius = 25
 Animal.physicsRadius = 15
 Animal.mass = 10
 Animal.name = "animal"
+Animal.deathSound = love.audio.newSource("pop.mp3", "static")
 
 -- constructor
 function Animal:new()
@@ -26,6 +27,10 @@ function Animal:new()
     return instance
 end
 
+function Animal:isAnimal()
+  return true
+end
+
 -- function that you would normally think of as the constructor.
 function Animal:init(world, id, ... )
   self.id = id
@@ -37,6 +42,7 @@ end
 
 -- called when killed
 function Animal:respawn()
+  self.deathSound:play()
   self.body:setPosition(self:randomPosition())
   self.body:setLinearVelocity(self:randomVelocity())
   self.health = self.maxHealth
