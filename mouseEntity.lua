@@ -1,5 +1,7 @@
 MouseEntity = {}
-ExtraMath = require( "ExtraMath" )
+ExtraMath = require( "extraMath" )
+EntityManager = require( "entityManager" )
+Field = require( "Field" )
 
 function MouseEntity:new()
  -- create a new table for the object instance
@@ -137,6 +139,19 @@ function MouseEntity:initTools()
 				--print("sx="..drag.startX.."\tsY="..drag.startY.."eX="..drag.endX.."ey="..drag.endY)
 			end
 		end
+	end
+
+
+	push = {}
+	self.tools["3"] = push
+	push.name = "push"
+
+	push.mousepressed = function(mouseEntity, x, y, button, istouch)
+      local id = EntityManager:getNewId()
+      local field = Field:new()
+      print("x: "..x.."\ty: "..y)
+      field:init(state.world, id, x, y)
+      EntityManager:register(field, id)
 	end
 
 	self.activeToolKey = "1"
